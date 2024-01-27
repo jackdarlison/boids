@@ -6,6 +6,7 @@ mod camera;
 mod flock;
 mod debug;
 mod moveable;
+mod fps;
 
 fn main() {
     App::new()
@@ -15,6 +16,7 @@ fn main() {
         .add_plugins(camera::CameraPlugin)
         .add_plugins(flock::FlockPlugin)
         .add_plugins(moveable::MoveablePlugin)
+        .add_plugins(fps::FpsPlugin)
         // .add_plugins(debug::DebugPlugin)
         .run();
 }
