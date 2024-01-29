@@ -4,11 +4,15 @@ use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, si
 
 const NUM_BOIDS: usize = 100;
 const BOID_SPEED: f32 = 30.0;
+
 const SEPARATION_STRENGTH: f32 = 1.0;
+const SEPARATION_RANGE: f32 = 50.0;
 const ALIGNMENT_STRENGTH: f32 = 1.0;
-const COHESION_STRENGTH: f32 = 0.9;
+const ALIGNMENT_RANGE: f32 = 100.0;
+const COHESION_STRENGTH: f32 = 1.0;
+const COHESION_RANGE: f32 = 200.0;
+
 const FLOCK_CENTRE_STRENGTH: f32 = 0.2;
-const BOID_RANGE: f32 = 50.0;
 
 #[derive(Component, Debug)]
 pub struct Flock {
@@ -68,23 +72,37 @@ fn apply_boids_rules(
     let mut forces: HashMap<Entity, Vec3> = HashMap::new();
 
     for (e, t, _) in query.iter() {
-        let mut force = Vec3::ZERO;
+        let mut total_separation = Vec3::ZERO;
+        let mut total_alignment = Vec3::ZERO;
+        let mut total_cohesion = Vec3::ZERO;
+        let mut closest_distance = f32::MAX;
+        let mut closest_force = Vec3::ZERO;
         for (e2, t2, v2) in query.iter() {
             if e == e2 {
                 continue;
             }
-
             let distance = t.translation.distance(t2.translation);
-            if distance < BOID_RANGE {
-                let separation = (t.translation - t2.translation).normalize();
-                let alignment = v2.value.normalize();
-                let cohesion = (t2.translation - t.translation).normalize();
-                
-                force += separation * SEPARATION_STRENGTH;
-                force += alignment * ALIGNMENT_STRENGTH;
-                force += cohesion * COHESION_STRENGTH;
+            if distance < SEPARATION_RANGE {
+                let separation = (t.translation - t2.translation).normalize_or_zero();
+                total_separation += separation;
+                if distance < closest_distance{
+                    closest_distance = distance;
+                    closest_force = separation; 
+                }
+            }
+            if distance < ALIGNMENT_RANGE {
+                let alignment = v2.value.normalize_or_zero();
+                total_alignment += alignment;
+            }
+            if distance < COHESION_RANGE {
+                let cohesion = (t2.translation - t.translation).normalize_or_zero();
+                total_cohesion += cohesion;
             }
         }
+        let force = total_separation.normalize_or_zero() * SEPARATION_STRENGTH
+            + total_alignment.normalize_or_zero() * ALIGNMENT_STRENGTH
+            + total_cohesion.normalize_or_zero() * COHESION_STRENGTH
+            + closest_force * SEPARATION_STRENGTH;
         forces.insert(e, force);
     }
 
