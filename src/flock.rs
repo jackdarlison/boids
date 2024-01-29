@@ -2,12 +2,12 @@ use bevy::{prelude::*, utils::HashMap};
 
 use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
 
-const NUM_BOIDS: usize = 50;
+const NUM_BOIDS: usize = 100;
 const BOID_SPEED: f32 = 30.0;
 const SEPARATION_STRENGTH: f32 = 1.0;
 const ALIGNMENT_STRENGTH: f32 = 1.0;
 const COHESION_STRENGTH: f32 = 0.9;
-const FLOCK_CENTRE_STRENGTH: f32 = 0.1;
+const FLOCK_CENTRE_STRENGTH: f32 = 0.2;
 const BOID_RANGE: f32 = 50.0;
 
 #[derive(Component, Debug)]
