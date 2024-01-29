@@ -1,12 +1,12 @@
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}};
+use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
 
-const NUM_BOIDS: usize = 10;
-const BOID_SPEED: f32 = 20.0;
+const NUM_BOIDS: usize = 50;
+const BOID_SPEED: f32 = 30.0;
 const SEPARATION_STRENGTH: f32 = 1.0;
-const ALIGNMENT_STRENGTH: f32 = 0.5;
-const COHESION_STRENGTH: f32 = 0.5;
+const ALIGNMENT_STRENGTH: f32 = 1.0;
+const COHESION_STRENGTH: f32 = 0.9;
 const FLOCK_CENTRE_STRENGTH: f32 = 0.1;
 const BOID_RANGE: f32 = 50.0;
 
@@ -24,8 +24,10 @@ pub struct FlockPlugin;
 impl Plugin for FlockPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_flock)
-            .add_systems(Update, apply_flock_centre)
-            .add_systems(Update, apply_boids_rules);
+            .add_systems(Update, (
+                apply_boids_rules,
+                apply_flock_centre,
+            ).in_set(InSimulationSchedule::EntityUpdates));
             
     }
     
@@ -83,7 +85,7 @@ fn apply_boids_rules(
                 force += cohesion * COHESION_STRENGTH;
             }
         }
-        forces.insert(e, force / NUM_BOIDS as f32);
+        forces.insert(e, force);
     }
 
     for (e, _, mut v) in query.iter_mut() {

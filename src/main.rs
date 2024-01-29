@@ -7,6 +7,7 @@ mod flock;
 mod debug;
 mod moveable;
 mod fps;
+mod simulation_schedule;
 
 fn main() {
     App::new()
@@ -17,6 +18,7 @@ fn main() {
         .add_plugins(flock::FlockPlugin)
         .add_plugins(moveable::MoveablePlugin)
         .add_plugins(fps::FpsPlugin)
+        .add_plugins(simulation_schedule::SimulationSchedulePlugin)
         // .add_plugins(debug::DebugPlugin)
         .run();
 }

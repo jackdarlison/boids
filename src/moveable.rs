@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::simulation_schedule::InSimulationSchedule;
+
 #[derive(Component, Debug)]
 pub struct Velocity {
     pub value: Vec3,
@@ -21,8 +23,10 @@ pub struct MoveablePlugin;
 
 impl Plugin for MoveablePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, move_objects)
-            .add_systems(Update, face_direction);
+        app.add_systems(Update, (
+            move_objects,
+            face_direction,
+        ).in_set(InSimulationSchedule::EntityUpdates));
     }
 }
 
