@@ -12,7 +12,7 @@ impl Plugin for AssetLoaderPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Assets>()
             .add_systems(PreStartup, load_assets)
-            .add_systems(Update, play_animations);
+            .add_systems(Update, play_fish_animations);
     }
 }   
 
@@ -21,11 +21,9 @@ fn load_assets(mut assets: ResMut<Assets>, server: Res<AssetServer>) {
     assets.fish_animation = server.load("Fish.glb#Animation0");
 }
 
-fn play_animations(assets: Res<Assets>, mut players: Query<&mut AnimationPlayer>) {
-    // Loops over all entities with an AnimationPlayer component and plays the animation
-    // Idealy we want the animations to start on different frames
-    for mut player in players.iter_mut() {
-        player.play(assets.fish_animation.clone()).repeat();
+fn play_fish_animations(assets: Res<Assets>, mut players: Query<&mut AnimationPlayer, Added<AnimationPlayer>>) {
+    for (i, mut player) in players.iter_mut().enumerate() {
+        player.play(assets.fish_animation.clone_weak()).seek_to((i as f32) * 0.1).repeat();
     }
 }
 

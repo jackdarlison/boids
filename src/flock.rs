@@ -2,7 +2,7 @@ use bevy::{prelude::*, utils::HashMap};
 
 use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}};
 
-const NUM_BOIDS: usize = 3;
+const NUM_BOIDS: usize = 10;
 const BOID_SPEED: f32 = 20.0;
 const SEPARATION_STRENGTH: f32 = 1.0;
 const ALIGNMENT_STRENGTH: f32 = 0.5;
@@ -55,7 +55,7 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>) {
                 identity: 0,
                 centre: Vec3::ZERO,
             },
-            Boid
+            Boid,
         ));
     }
 }
