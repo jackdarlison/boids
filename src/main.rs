@@ -10,6 +10,7 @@ mod moveable;
 mod fps;
 mod simulation_schedule;
 mod selected;
+mod config_gui;
 
 fn main() {
     App::new()
@@ -23,7 +24,8 @@ fn main() {
         .add_plugins(moveable::MoveablePlugin)
         .add_plugins(fps::FpsPlugin)
         .add_plugins(simulation_schedule::SimulationSchedulePlugin)
-        .add_plugins(selected::SelectedPlugin)
+        .add_plugins(config_gui::ConfigGuiPlugin)
+        // .add_plugins(selected::SelectedPlugin)
         // .add_plugins(debug::DebugPlugin)
         .run();
 }
