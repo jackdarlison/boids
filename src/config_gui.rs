@@ -33,7 +33,13 @@ fn setup_config_gui(
         }
     )).id();
 
-    
+    let header_id = commands.spawn((
+        TextBundle {
+            text: Text::from_section("Boid Configuration", TextStyle::default()),
+            ..default()
+        },
+    )).id();
 
+    commands.entity(root_id).push_children(&[header_id]);
 
 }
