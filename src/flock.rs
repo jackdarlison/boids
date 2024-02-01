@@ -1,9 +1,10 @@
 use bevy::{prelude::*, utils::HashMap};
+use bevy_mod_picking::prelude::*;
 
-use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
+use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, selected::Selected, simulation_schedule::InSimulationSchedule};
 
 const NUM_BOIDS: usize = 100;
-const BOID_SPEED: f32 = 30.0;
+const BOID_SPEED: f32 = 0.0;
 
 const SEPARATION_STRENGTH: f32 = 1.0;
 const SEPARATION_RANGE: f32 = 50.0;
@@ -62,6 +63,7 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>) {
                 centre: Vec3::ZERO,
             },
             Boid,
+            PickableBundle::default(),
         ));
     }
 }

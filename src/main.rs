@@ -1,4 +1,5 @@
-use bevy::prelude::*;
+use bevy::{pbr::wireframe::WireframePlugin, prelude::*};
+use bevy_mod_picking::prelude::*;
 
 mod lighting;
 mod asset_loader;
@@ -8,10 +9,13 @@ mod debug;
 mod moveable;
 mod fps;
 mod simulation_schedule;
+mod selected;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPickingPlugins)
+        .add_plugins(WireframePlugin)
         .add_plugins(lighting::LightingPlugin)
         .add_plugins(asset_loader::AssetLoaderPlugin)
         .add_plugins(camera::CameraPlugin)
@@ -19,6 +23,7 @@ fn main() {
         .add_plugins(moveable::MoveablePlugin)
         .add_plugins(fps::FpsPlugin)
         .add_plugins(simulation_schedule::SimulationSchedulePlugin)
+        .add_plugins(selected::SelectedPlugin)
         // .add_plugins(debug::DebugPlugin)
         .run();
 }
