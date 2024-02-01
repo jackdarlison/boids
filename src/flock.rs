@@ -12,6 +12,7 @@ pub struct BoidConfig {
     min_speed: f32,
     max_speed: f32,
     
+    // View angle in radians
     view_angle: f32,
 
     separation_strength: f32,
@@ -29,7 +30,7 @@ impl Default for BoidConfig {
         Self {
             min_speed: 10.0,
             max_speed: 30.0,
-            view_angle: PI/2.0,
+            view_angle: f32::to_radians(80.0),
             separation_strength: 1.0,
             separation_range: 50.0,
             alignment_strength: 1.0,
