@@ -140,7 +140,7 @@ fn apply_boids_rules(
 
     for (e, _, mut v) in query.iter_mut() {
         let force = *forces.get(&e).unwrap_or(&Vec3::ZERO);
-        v.value = bounded_vector(v.value + force, config.min_speed, config.max_speed);
+        v.value = bound_vector(v.value + force, config.min_speed, config.max_speed);
         
     }
 }
@@ -151,11 +151,11 @@ fn apply_flock_centre(
 ) {
     for (flock, transform, mut velocity) in query.iter_mut() {
         let force = (flock.centre - transform.translation).normalize_or_zero() * config.flock_centre_strength;
-        velocity.value = bounded_vector(velocity.value + force, config.min_speed, config.max_speed);
+        velocity.value = bound_vector(velocity.value + force, config.min_speed, config.max_speed);
     }
 }
 
-fn bounded_vector(mut vector: Vec3, min: f32, max: f32) -> Vec3 {
+fn bound_vector(mut vector: Vec3, min: f32, max: f32) -> Vec3 {
     if vector.length() > max {
         vector = vector.normalize_or_zero() * max;
     } else if vector.length() < min {
