@@ -1,4 +1,5 @@
 use bevy::{pbr::wireframe::WireframePlugin, prelude::*};
+use bevy_egui::EguiPlugin;
 use bevy_mod_picking::prelude::*;
 
 mod lighting;
@@ -17,6 +18,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(DefaultPickingPlugins)
         .add_plugins(WireframePlugin)
+        .add_plugins(EguiPlugin)
         .add_plugins(lighting::LightingPlugin)
         .add_plugins(asset_loader::AssetLoaderPlugin)
         .add_plugins(camera::CameraPlugin)

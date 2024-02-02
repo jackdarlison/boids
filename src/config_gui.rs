@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_egui::{egui, EguiContexts};
 
 #[derive(Component)]
 pub struct ConfigGuiRoot;
@@ -8,7 +9,7 @@ pub struct ConfigGuiPlugin;
 
 impl Plugin for ConfigGuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_config_gui);
+        app.add_systems(Update, setup_config_egui);
     }
 }
 
@@ -42,4 +43,12 @@ fn setup_config_gui(
 
     commands.entity(root_id).push_children(&[header_id]);
 
+}
+
+fn setup_config_egui(
+    mut contexts: EguiContexts,
+) {
+    egui::Window::new("Boid Configuration").show(contexts.ctx_mut(), |ui| {
+        ui.label("Hello");
+    });
 }
