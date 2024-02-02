@@ -1,9 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
-#[derive(Component)]
-pub struct ConfigGuiRoot;
-
+use crate::flock::BoidConfig;
 
 pub struct ConfigGuiPlugin;
 
@@ -13,42 +11,23 @@ impl Plugin for ConfigGuiPlugin {
     }
 }
 
-fn setup_config_gui(
-    mut commands: Commands,
-) {
-    let root_id = commands.spawn((
-        ConfigGuiRoot,
-        NodeBundle {
-            background_color: BackgroundColor(Color::BLACK.with_a(0.5)),
-            z_index: ZIndex::Global(i32::MAX),
-            style: Style {
-                position_type: PositionType::Absolute,
-                right: Val::Auto,
-                top: Val::Percent(1.),
-                bottom: Val::Auto,
-                left: Val::Percent(1.),
-                padding: UiRect::all(Val::Px(4.0)),
-                ..Default::default()
-            },
-            ..Default::default()
-        }
-    )).id();
-
-    let header_id = commands.spawn((
-        TextBundle {
-            text: Text::from_section("Boid Configuration", TextStyle::default()),
-            ..default()
-        },
-    )).id();
-
-    commands.entity(root_id).push_children(&[header_id]);
-
-}
-
 fn setup_config_egui(
     mut contexts: EguiContexts,
+    mut boid_config: ResMut<BoidConfig>,
 ) {
     egui::Window::new("Boid Configuration").show(contexts.ctx_mut(), |ui| {
-        ui.label("Hello");
+        ui.add(egui::Slider::new(&mut boid_config.max_speed, 0.0..=100.0).text("Max Speed"));
+        ui.add(egui::Slider::new(&mut boid_config.min_speed, 0.0..=100.0).text("Min Speed"));
+
+        ui.add(egui::Slider::new(&mut boid_config.view_angle, 0.0..=std::f32::consts::PI).text("View Angle"));
+
+        ui.add(egui::Slider::new(&mut boid_config.separation_strength, 0.0..=10.0).text("Separation Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.separation_range, 0.0..=200.0).text("Separation Range"));
+        ui.add(egui::Slider::new(&mut boid_config.alignment_strength, 0.0..=10.0).text("Alignment Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.alignment_range, 0.0..=200.0).text("Alignment Range"));
+        ui.add(egui::Slider::new(&mut boid_config.cohesion_strength, 0.0..=10.0).text("Cohesion Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.cohesion_range, 0.0..=200.0).text("Cohesion Range"));
+
+        ui.add(egui::Slider::new(&mut boid_config.flock_centre_strength, 0.0..=1.0).text("Flock Centre Strength"));
     });
 }

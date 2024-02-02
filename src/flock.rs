@@ -9,20 +9,20 @@ const NUM_BOIDS: usize = 100;
 
 #[derive(Resource, Debug)]
 pub struct BoidConfig {
-    min_speed: f32,
-    max_speed: f32,
+    pub min_speed: f32,
+    pub max_speed: f32,
     
     // View angle in radians
-    view_angle: f32,
+    pub view_angle: f32,
 
-    separation_strength: f32,
-    separation_range: f32,
-    alignment_strength: f32,
-    alignment_range: f32,
-    cohesion_strength: f32,
-    cohesion_range: f32,
+    pub separation_strength: f32,
+    pub separation_range: f32,
+    pub alignment_strength: f32,
+    pub alignment_range: f32,
+    pub cohesion_strength: f32,
+    pub cohesion_range: f32,
 
-    flock_centre_strength: f32,
+    pub flock_centre_strength: f32,
 }
 
 impl Default for BoidConfig {
@@ -30,7 +30,7 @@ impl Default for BoidConfig {
         Self {
             min_speed: 10.0,
             max_speed: 30.0,
-            view_angle: f32::to_radians(80.0),
+            view_angle: f32::to_radians(120.0),
             separation_strength: 1.0,
             separation_range: 50.0,
             alignment_strength: 1.0,
