@@ -21,13 +21,13 @@ fn setup_config_egui(
 
         ui.add(egui::Slider::new(&mut boid_config.view_angle, 0.0..=std::f32::consts::PI).text("View Angle"));
 
-        ui.add(egui::Slider::new(&mut boid_config.separation_strength, 0.0..=10.0).text("Separation Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.separation_strength, 0.0..=20.0).text("Separation Strength"));
         ui.add(egui::Slider::new(&mut boid_config.separation_range, 0.0..=200.0).text("Separation Range"));
-        ui.add(egui::Slider::new(&mut boid_config.alignment_strength, 0.0..=10.0).text("Alignment Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.alignment_strength, 0.0..=20.0).text("Alignment Strength"));
         ui.add(egui::Slider::new(&mut boid_config.alignment_range, 0.0..=200.0).text("Alignment Range"));
-        ui.add(egui::Slider::new(&mut boid_config.cohesion_strength, 0.0..=10.0).text("Cohesion Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.cohesion_strength, 0.0..=20.0).text("Cohesion Strength"));
         ui.add(egui::Slider::new(&mut boid_config.cohesion_range, 0.0..=200.0).text("Cohesion Range"));
 
-        ui.add(egui::Slider::new(&mut boid_config.flock_centre_strength, 0.0..=1.0).text("Flock Centre Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.flock_centre_strength, 0.0..=20.0).text("Flock Centre Strength"));
     });
 }
