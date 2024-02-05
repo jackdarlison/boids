@@ -5,7 +5,7 @@ use bevy_mod_picking::prelude::*;
 
 use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
 
-const NUM_BOIDS: usize = 1000;
+const NUM_BOIDS: usize = 100;
 
 #[derive(Resource, Debug)]
 pub struct BoidConfig {
@@ -52,42 +52,49 @@ pub struct Flock {
 pub struct Boid;
 
 #[derive(Resource)]
-pub struct Flocks {
-    pub flocks: HashMap<usize, HashMap<(isize, isize, isize), Vec<Entity>>>,
+pub struct BoidMap {
+    pub map: HashMap<(isize, isize, isize), Vec<Entity>>,
     pub resolution: usize,
 }
 
-impl Default for Flocks {
+impl Default for BoidMap {
     fn default() -> Self {
         Self {
-            flocks: HashMap::new(),
+            map: HashMap::new(),
             resolution: 0,
         }
     }
 }
 
-impl Flocks {
+impl BoidMap {
     pub fn reset(&mut self) {
-        self.flocks.clear();
+        self.map.clear();
     }
 
-    pub fn add_boid(&mut self, flock: usize, boid: Entity, position: Vec3) {
+    pub fn add_boid(&mut self, boid: Entity, position: Vec3) {
         let (x, y, z) = self.vec3_to_grid(position);
-        let flock = self.flocks.entry(flock).or_insert_with(HashMap::new);
-        let boids = flock.entry((x, y, z)).or_insert_with(Vec::new);
+        let boids = self.map.entry((x, y, z)).or_insert_with(Vec::new);
         boids.push(boid);
     }
 
     pub fn vec3_to_grid(&self, position: Vec3) -> (isize, isize, isize) {
-        // convert the position to grid coordinates based on the resolution
+        // floor the position based on the resolution
+        let conversion = |x: f32| -> isize {
+            if x < 0.0 {
+                // subtract 1 to make sure the conversion is always towards negative
+                (x as isize / self.resolution as isize) - 1
+            } else {
+                x as isize / self.resolution as isize
+            }
+        };
         (
-            position.x as isize / self.resolution as isize,
-            position.y as isize / self.resolution as isize,
-            position.z as isize / self.resolution as isize,
+            conversion(position.x),
+            conversion(position.y),
+            conversion(position.z),
         )
     }
 
-    pub fn get_possible_neighbours(&self, flock: usize, position: Vec3) -> Vec<Entity> {
+    pub fn get_possible_neighbours(&self, position: Vec3) -> Vec<Entity> {
         let (x, y, z) = self.vec3_to_grid(position);
         let mut boids = Vec::new();
         // Iterate over the 3x3x3 grid around the boid to collect all possible neighbours
@@ -95,8 +102,7 @@ impl Flocks {
             for j in -1..=1 {
                 for k in -1..=1 {
                     boids.extend(
-                        self.flocks.get(&flock).and_then(|flock| flock.get(&(x + i, y + j, z + k)))
-                        .unwrap_or(&Vec::new())
+                        self.map.get(&(x + i, y + j, z + k)).unwrap_or(&Vec::new())
                     );
                 }
             }
@@ -111,9 +117,9 @@ impl Plugin for FlockPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_flock)
             .init_resource::<BoidConfig>()
-            .init_resource::<Flocks>()
+            .init_resource::<BoidMap>()
             .add_systems(Update, (
-                update_flocks,
+                update_boid_map,
                 (apply_boids_rules, apply_flock_centre),
             ).chain().in_set(InSimulationSchedule::EntityUpdates));
             
@@ -134,6 +140,9 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
             MoveableObjectBundle {
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
+                    //3D
+                    // rand::random::<f32>(),
+                    //2D
                     0.0,
                     rand::random::<f32>(),
                 ) * config.min_speed),
@@ -153,18 +162,18 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
     }
 }
 
-fn update_flocks(
-    mut flocks: ResMut<Flocks>,
+fn update_boid_map(
+    mut flocks: ResMut<BoidMap>,
     config: Res<BoidConfig>,
-    query: Query<(Entity, &Flock, &Transform)>,
+    query: Query<(Entity, &Transform), With<Boid>>,
 ) {
     flocks.reset();
     flocks.resolution = max(max(
         config.separation_range as usize,
         config.alignment_range as usize,
     ), config.cohesion_range as usize) * 2;
-    for (e, flock, t) in query.iter() {
-        flocks.add_boid(flock.identity, e, t.translation);
+    for (e, t) in query.iter() {
+        flocks.add_boid( e, t.translation);
     }
 }
 
@@ -172,7 +181,7 @@ fn apply_boids_rules(
     mut query: Query<(Entity, &Transform, &mut Velocity, &Flock), With<Boid>>,
     config: Res<BoidConfig>,
     time: Res<Time>,
-    flocks: Res<Flocks>,
+    flocks: Res<BoidMap>,
 ) {
     let mut forces: HashMap<Entity, Vec3> = HashMap::new();
 
@@ -182,12 +191,12 @@ fn apply_boids_rules(
         let mut total_cohesion = Vec3::ZERO;
         let mut closest_distance = f32::MAX;
         let mut closest_force = Vec3::ZERO;
-        for entity2 in flocks.get_possible_neighbours(flock1.identity, transform1.translation) {
+        for entity2 in flocks.get_possible_neighbours(transform1.translation) {
             // ignore self
             if entity1 == entity2 {continue};
             
             // retrieve the components of the other boid
-            let (_, transform2, velocity2, _) = query.get(entity2).unwrap();
+            let (_, transform2, velocity2, flock2) = query.get(entity2).unwrap();
 
             // check if the other boid is within the view angle
             let angle = velocity1.value.angle_between(transform2.translation - transform1.translation);
@@ -195,7 +204,7 @@ fn apply_boids_rules(
 
             let distance = transform1.translation.distance(transform2.translation);
             if distance < config.separation_range {
-                // value is normalised so that all boids have the same influence
+                // values are normalised so that all boids have the same influence
                 let separation = (transform1.translation - transform2.translation).normalize_or_zero();
                 total_separation += separation;
                 if distance < closest_distance{
@@ -203,6 +212,10 @@ fn apply_boids_rules(
                     closest_force = separation; 
                 }
             }
+
+            // If not in the same flock, ignore alignment and cohesion
+            if flock1.identity != flock2.identity {continue};
+
             if distance < config.alignment_range {
                 let alignment = velocity2.value.normalize_or_zero();
                 total_alignment += alignment;
