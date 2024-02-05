@@ -140,6 +140,9 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
             MoveableObjectBundle {
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
+                    //3D
+                    // rand::random::<f32>(),
+                    //2D
                     0.0,
                     rand::random::<f32>(),
                 ) * config.min_speed),
