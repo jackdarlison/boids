@@ -5,7 +5,7 @@ use bevy_mod_picking::prelude::*;
 
 use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
 
-const NUM_BOIDS: usize = 1000;
+const NUM_BOIDS: usize = 1;
 
 #[derive(Resource, Debug)]
 pub struct BoidConfig {
@@ -79,11 +79,19 @@ impl Flocks {
     }
 
     pub fn vec3_to_grid(&self, position: Vec3) -> (isize, isize, isize) {
-        // convert the position to grid coordinates based on the resolution
+        // floor the position based on the resolution
+        let conversion = |x: f32| -> isize {
+            if x < 0.0 {
+                // subtract 1 to make sure the conversion is always towards negative
+                (x as isize / self.resolution as isize) - 1
+            } else {
+                x as isize / self.resolution as isize
+            }
+        };
         (
-            position.x as isize / self.resolution as isize,
-            position.y as isize / self.resolution as isize,
-            position.z as isize / self.resolution as isize,
+            conversion(position.x),
+            conversion(position.y),
+            conversion(position.z),
         )
     }
 
