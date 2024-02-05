@@ -195,7 +195,7 @@ fn apply_boids_rules(
             if entity1 == entity2 {continue};
             
             // retrieve the components of the other boid
-            let (_, transform2, velocity2, _) = query.get(entity2).unwrap();
+            let (_, transform2, velocity2, flock2) = query.get(entity2).unwrap();
 
             // check if the other boid is within the view angle
             let angle = velocity1.value.angle_between(transform2.translation - transform1.translation);
@@ -203,7 +203,7 @@ fn apply_boids_rules(
 
             let distance = transform1.translation.distance(transform2.translation);
             if distance < config.separation_range {
-                // value is normalised so that all boids have the same influence
+                // values are normalised so that all boids have the same influence
                 let separation = (transform1.translation - transform2.translation).normalize_or_zero();
                 total_separation += separation;
                 if distance < closest_distance{
@@ -211,6 +211,10 @@ fn apply_boids_rules(
                     closest_force = separation; 
                 }
             }
+
+            // If not in the same flock, ignore alignment and cohesion
+            if flock1.identity != flock2.identity {continue};
+
             if distance < config.alignment_range {
                 let alignment = velocity2.value.normalize_or_zero();
                 total_alignment += alignment;
