@@ -1,11 +1,11 @@
-use std::cmp::max;
+use std::{cmp::max, sync::{Arc, Mutex}};
 
 use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_picking::prelude::*;
 
 use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
 
-const NUM_BOIDS: usize = 100;
+const NUM_BOIDS: usize = 1000;
 
 #[derive(Resource, Debug)]
 pub struct BoidConfig {
@@ -141,9 +141,9 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
                     //3D
-                    // rand::random::<f32>(),
+                    rand::random::<f32>(),
                     //2D
-                    0.0,
+                    // 0.0,
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
@@ -183,9 +183,9 @@ fn apply_boids_rules(
     time: Res<Time>,
     flocks: Res<BoidMap>,
 ) {
-    let mut forces: HashMap<Entity, Vec3> = HashMap::new();
+    let forces: Arc<Mutex<HashMap<Entity, Vec3>>> = Arc::new(Mutex::new(HashMap::new()));
 
-    for (entity1, transform1, velocity1, flock1) in query.iter() {
+    query.par_iter().for_each( |(entity1, transform1, velocity1, flock1)| {
         let mut total_separation = Vec3::ZERO;
         let mut total_alignment = Vec3::ZERO;
         let mut total_cohesion = Vec3::ZERO;
@@ -230,13 +230,18 @@ fn apply_boids_rules(
             + total_alignment.normalize_or_zero() * config.alignment_strength
             + total_cohesion.normalize_or_zero() * config.cohesion_strength
             + closest_force * config.separation_strength;
-        forces.insert(entity1, force);
-    }
+        if let Ok(mut forces) = forces.lock() {
+            forces.insert(entity1, force);
+        }
+        // forces.insert(entity1, force);
+    });
 
-    for (e, _, mut v, _) in query.iter_mut() {
+    let forces = forces.lock().unwrap();
+
+    query.par_iter_mut().for_each( |(e, _, mut v, _)| {
         let force = *forces.get(&e).unwrap_or(&Vec3::ZERO);
         v.value = bound_vector(v.value + force * time.delta_seconds(), config.min_speed, config.max_speed);
-    }
+    });
 }
 
 fn apply_flock_centre(
