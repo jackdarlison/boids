@@ -29,5 +29,8 @@ fn setup_config_egui(
         ui.add(egui::Slider::new(&mut boid_config.cohesion_range, 0.0..=200.0).text("Cohesion Range"));
 
         ui.add(egui::Slider::new(&mut boid_config.flock_centre_strength, 0.0..=20.0).text("Flock Centre Strength"));
+                
+        ui.add(egui::Slider::new(&mut boid_config.predator_strength, 0.0..=50.0).text("Predator Strength"));
+        ui.add(egui::Slider::new(&mut boid_config.predator_avoidance_strength, 0.0..=50.0).text("Predator Avoidance Strength"));
     });
 }

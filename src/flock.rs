@@ -23,6 +23,9 @@ pub struct BoidConfig {
     pub cohesion_range: f32,
 
     pub flock_centre_strength: f32,
+
+    pub predator_strength: f32,
+    pub predator_avoidance_strength: f32,
 }
 
 impl Default for BoidConfig {
@@ -38,6 +41,8 @@ impl Default for BoidConfig {
             cohesion_strength: 5.0,
             cohesion_range: 100.0,
             flock_centre_strength: 2.0,
+            predator_strength: 30.0,
+            predator_avoidance_strength: 5.0,
         }
     }
 }
@@ -145,9 +150,9 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
                     //3D
-                    rand::random::<f32>(),
+                    // rand::random::<f32>(),
                     //2D
-                    // 0.0,
+                    0.0,
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
@@ -178,9 +183,9 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
                     //3D
-                    rand::random::<f32>(),
+                    // rand::random::<f32>(),
                     //2D
-                    // 0.0,
+                    0.0,
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
@@ -300,9 +305,12 @@ fn predator_prey_rules(
                 if distance < predator_transform.translation.distance(closest) {
                     closest = prey_transform.translation - predator_transform.translation;
                 }
+                // Prey avoids predator
+                prey_velocity.value = bound_vector(prey_velocity.value + (prey_transform.translation - predator_transform.translation).normalize_or_zero() * config.predator_avoidance_strength * time.delta_seconds(), config.min_speed, config.max_speed);
           }
        }
-       predator_velocity.value = bound_vector(predator_velocity.value + closest.normalize_or_zero() * 50.0 * time.delta_seconds(), config.min_speed, config.max_speed);
+       // Predator chases the closest prey
+       predator_velocity.value = bound_vector(predator_velocity.value + closest.normalize_or_zero() * config.predator_strength * time.delta_seconds(), config.min_speed, config.max_speed);
     });
 }
 
@@ -314,6 +322,8 @@ fn apply_flock_centre(
 ) {
     for (flock, transform, mut velocity) in query.iter_mut() {
         let force = (flock.centre - transform.translation).normalize_or_zero() * config.flock_centre_strength;
+        // Boids move to the flock centre
+        // mainly used to maintain the flock in a certain area
         velocity.value = bound_vector(velocity.value + force * time.delta_seconds(), config.min_speed, config.max_speed);
     }
 }
