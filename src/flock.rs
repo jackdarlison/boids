@@ -160,6 +160,37 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
             PickableBundle::default(),
         ));
     }
+
+    for _ in 0..5 {
+        let transform = Transform::from_xyz(
+            rand::random::<f32>() * spatial_separation - spatial_separation / 2.0,
+            0.0,
+            rand::random::<f32>() * spatial_separation - spatial_separation / 2.0,
+        );
+        commands.spawn((
+            MoveableObjectBundle {
+                velocity: Velocity::new(Vec3::new(
+                    rand::random::<f32>(),
+                    //3D
+                    rand::random::<f32>(),
+                    //2D
+                    // 0.0,
+                    rand::random::<f32>(),
+                ) * config.min_speed),
+                model: SceneBundle {
+                    scene: assets.shark.clone(),
+                    transform,
+                    ..default()
+                },
+            },
+            Flock {
+                identity: 1,
+                centre: Vec3::ZERO,
+            },
+            Boid,
+            PickableBundle::default(),
+        )); 
+    }
 }
 
 fn update_boid_map(
