@@ -1,9 +1,9 @@
 use bevy::{animation, prelude::*, utils::HashMap};
 
-use crate::flock::Boid;
+use crate::{flock::Boid, utils::get_top_entity};
 
 #[derive(Resource, Debug, Default)]
-pub struct Assets {
+pub struct SimAssets {
     pub models: HashMap<String, Handle<Scene>>,
     pub animations: HashMap<String, Handle<AnimationClip>>,
 }
@@ -15,30 +15,20 @@ pub struct AssetLoaderPlugin;
 
 impl Plugin for AssetLoaderPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Assets>()
+        app.init_resource::<SimAssets>()
             .add_systems(PreStartup, load_assets)
             .add_systems(Update, (link_animations, init_animations).chain());
 
     }
 }   
 
-fn load_assets(mut assets: ResMut<Assets>, server: Res<AssetServer>) {
+fn load_assets(mut assets: ResMut<SimAssets>, server: Res<AssetServer>) {
     for name in &["Fish", "Shark"] {
         assets.models.insert(name.to_string(), server.load(format!("{}.glb#Scene0", name)));
         assets.animations.insert(name.to_string(), server.load(format!("{}.glb#Animation0", name)));
     }
 }
 
-fn get_top_entity(mut current_entity: Entity, parents: &Query<&Parent>) -> Entity {
-    loop {
-        if let Ok(parent) = parents.get(current_entity) {
-            current_entity = parent.get();
-        } else {
-            break;
-        }
-    }
-    current_entity
-}
 
 fn link_animations(mut commands: Commands, animation_players: Query<Entity, Added<AnimationPlayer>>, parents: Query<&Parent>) {
     for ani in animation_players.iter() {
@@ -48,7 +38,7 @@ fn link_animations(mut commands: Commands, animation_players: Query<Entity, Adde
 }
 
 
-fn init_animations(assets: Res<Assets>, mut boids_with_animations: Query<(&Boid, &AnimationLink), Added<AnimationLink>>, mut animation_players: Query<&mut AnimationPlayer>) {
+fn init_animations(assets: Res<SimAssets>, mut boids_with_animations: Query<(&Boid, &AnimationLink), Added<AnimationLink>>, mut animation_players: Query<&mut AnimationPlayer>) {
     // Another method may be to derive something from this, removing the need for animation links 
     // let (my_thing, my_thing_entity) = my_thing_query.get_single_mut().expect("Thing not found!");
     // for entity in children.iter_descendants(my_thing_entity) {

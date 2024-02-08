@@ -3,7 +3,7 @@ use std::{cmp::max, sync::{Arc, Mutex}};
 use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_picking::prelude::*;
 
-use crate::{asset_loader::Assets, moveable::{MoveableObjectBundle, Velocity}, simulation_schedule::InSimulationSchedule};
+use crate::{asset_loader::SimAssets, moveable::{MoveableObjectBundle, Velocity}, selected::SelectedEvent, simulation_schedule::InSimulationSchedule};
 
 const NUM_BOIDS: usize = 1000;
 
@@ -136,7 +136,11 @@ impl Plugin for FlockPlugin {
     
 }
 
-fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConfig>) {
+fn spawn_flock(
+    mut commands: Commands,
+    assets: Res<SimAssets>,
+    config: Res<BoidConfig>,
+) {
     //space boids out depending on the number of boids
     let spatial_separation = 100.0 * (NUM_BOIDS as f32).sqrt();
     for _ in 0..NUM_BOIDS {
@@ -169,6 +173,8 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                 model: "Fish".to_string(),
             },
             PickableBundle::default(),
+            // Creates an event when the entity is clicked
+            On::<Pointer<Click>>::send_event::<SelectedEvent>(),
         ));
     }
 
