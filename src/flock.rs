@@ -49,7 +49,10 @@ pub struct Flock {
 }
 
 #[derive(Component)]
-pub struct Boid;
+pub struct Boid {
+    pub model: String,
+    pub is_predator: bool,
+}
 
 #[derive(Resource)]
 pub struct BoidMap {
@@ -119,7 +122,7 @@ impl Plugin for FlockPlugin {
             .init_resource::<BoidConfig>()
             .init_resource::<BoidMap>()
             .add_systems(Update, (
-                update_boid_map,
+                update_boid_map, // spatial partitioning runs first
                 (apply_boids_rules, apply_flock_centre),
             ).chain().in_set(InSimulationSchedule::EntityUpdates));
             
@@ -147,7 +150,7 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
-                    scene: assets.fish.clone(),
+                    scene: assets.models.get("Fish").expect("Model 'Fish' shoulds exist").clone(),
                     transform,
                     ..default()
                 },
@@ -156,7 +159,10 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                 identity: 0,
                 centre: Vec3::ZERO,
             },
-            Boid,
+            Boid {
+                model: "Fish".to_string(),
+                is_predator: false,
+            },
             PickableBundle::default(),
         ));
     }
@@ -178,7 +184,7 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
-                    scene: assets.shark.clone(),
+                    scene: assets.models.get("Shark").expect("Model 'Shark' should exist").clone(),
                     transform,
                     ..default()
                 },
@@ -187,7 +193,10 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
                 identity: 1,
                 centre: Vec3::ZERO,
             },
-            Boid,
+            Boid {
+                model: "Shark".to_string(),
+                is_predator: true,
+            },
             PickableBundle::default(),
         )); 
     }
@@ -199,10 +208,11 @@ fn update_boid_map(
     query: Query<(Entity, &Transform), With<Boid>>,
 ) {
     flocks.reset();
+    //update the resolution of the map, which may have changed due to user input
     flocks.resolution = max(max(
         config.separation_range as usize,
         config.alignment_range as usize,
-    ), config.cohesion_range as usize) * 2;
+    ), config.cohesion_range as usize);
     for (e, t) in query.iter() {
         flocks.add_boid( e, t.translation);
     }
