@@ -51,8 +51,9 @@ pub struct Flock {
 #[derive(Component)]
 pub struct Boid {
     pub model: String,
-    pub is_predator: bool,
 }
+ #[derive(Component)]
+ pub struct Predator;
 
 #[derive(Resource)]
 pub struct BoidMap {
@@ -123,7 +124,7 @@ impl Plugin for FlockPlugin {
             .init_resource::<BoidMap>()
             .add_systems(Update, (
                 update_boid_map, // spatial partitioning runs first
-                (apply_boids_rules, apply_flock_centre),
+                (apply_boids_rules, apply_flock_centre, predator_prey_rules),
             ).chain().in_set(InSimulationSchedule::EntityUpdates));
             
     }
@@ -161,7 +162,6 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
             },
             Boid {
                 model: "Fish".to_string(),
-                is_predator: false,
             },
             PickableBundle::default(),
         ));
@@ -195,8 +195,8 @@ fn spawn_flock(mut commands: Commands, assets: Res<Assets>, config: Res<BoidConf
             },
             Boid {
                 model: "Shark".to_string(),
-                is_predator: true,
             },
+            Predator,
             PickableBundle::default(),
         )); 
     }
@@ -284,6 +284,28 @@ fn apply_boids_rules(
         v.value = bound_vector(v.value + force * time.delta_seconds(), config.min_speed, config.max_speed);
     });
 }
+
+fn predator_prey_rules(
+    mut predators: Query<(&Transform, &mut Velocity), With<Predator>>,
+    mut prey: Query<(&Transform, &mut Velocity), Without<Predator>>,
+    config: Res<BoidConfig>,
+    time: Res<Time>,
+    flocks: Res<BoidMap>,
+) {
+    predators.iter_mut().for_each(|(predator_transform, mut predator_velocity)| {
+       let mut closest = Vec3::MAX;
+       for prey_entity in flocks.get_possible_neighbours(predator_transform.translation) {
+          if let Ok((prey_transform, mut prey_velocity)) = prey.get_mut(prey_entity) {
+                let distance = predator_transform.translation.distance(prey_transform.translation);
+                if distance < predator_transform.translation.distance(closest) {
+                    closest = prey_transform.translation - predator_transform.translation;
+                }
+          }
+       }
+       predator_velocity.value = bound_vector(predator_velocity.value + closest.normalize_or_zero() * 50.0 * time.delta_seconds(), config.min_speed, config.max_speed);
+    });
+}
+
 
 fn apply_flock_centre(
     mut query: Query<(&Flock, &Transform, &mut Velocity), With<Boid>>,
