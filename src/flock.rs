@@ -6,6 +6,7 @@ use bevy_mod_picking::prelude::*;
 use crate::{asset_loader::SimAssets, moveable::{MoveableObjectBundle, Velocity}, selected::SelectedEvent, simulation_schedule::InSimulationSchedule};
 
 const NUM_BOIDS: usize = 1000;
+const THREE_D: bool = true;
 
 #[derive(Resource, Debug)]
 pub struct BoidConfig {
@@ -153,10 +154,11 @@ fn spawn_flock(
             MoveableObjectBundle {
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
-                    //3D
-                    // rand::random::<f32>(),
-                    //2D
-                    0.0,
+                    if THREE_D {
+                        rand::random::<f32>()
+                    } else {
+                        0.0
+                    },
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
@@ -188,10 +190,11 @@ fn spawn_flock(
             MoveableObjectBundle {
                 velocity: Velocity::new(Vec3::new(
                     rand::random::<f32>(),
-                    //3D
-                    // rand::random::<f32>(),
-                    //2D
-                    0.0,
+                    if THREE_D {
+                        rand::random::<f32>()
+                    } else {
+                        0.0
+                    },
                     rand::random::<f32>(),
                 ) * config.min_speed),
                 model: SceneBundle {
@@ -309,14 +312,14 @@ fn predator_prey_rules(
           if let Ok((prey_transform, mut prey_velocity)) = prey.get_mut(prey_entity) {
                 let distance = predator_transform.translation.distance(prey_transform.translation);
                 if distance < predator_transform.translation.distance(closest) {
-                    closest = prey_transform.translation - predator_transform.translation;
+                    closest = prey_transform.translation;
                 }
                 // Prey avoids predator
                 prey_velocity.value = bound_vector(prey_velocity.value + (prey_transform.translation - predator_transform.translation).normalize_or_zero() * config.predator_avoidance_strength * time.delta_seconds(), config.min_speed, config.max_speed);
           }
        }
        // Predator chases the closest prey
-       predator_velocity.value = bound_vector(predator_velocity.value + closest.normalize_or_zero() * config.predator_strength * time.delta_seconds(), config.min_speed, config.max_speed);
+       predator_velocity.value = bound_vector(predator_velocity.value + (closest - predator_transform.translation).normalize_or_zero() * config.predator_strength * time.delta_seconds(), config.min_speed, config.max_speed);
     });
 }
 
